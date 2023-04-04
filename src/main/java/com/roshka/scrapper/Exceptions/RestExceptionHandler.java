@@ -33,5 +33,13 @@ public class RestExceptionHandler {
         errorMap.put("error", ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMap);
     }
+
+    @ExceptionHandler(JwtException.class)
+    public ResponseEntity<?> handleJwtException(JwtException ex) {
+        Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("codigo", "g103");
+        errorMap.put("error", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(errorMap);
+    }
 }
 

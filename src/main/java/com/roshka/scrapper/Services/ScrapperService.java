@@ -11,10 +11,11 @@ import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class ScrapperService {
@@ -40,10 +41,11 @@ public class ScrapperService {
                 noticia.setTitulo(elemento.selectFirst(".queryly_item_title").text());
                 noticia.setResumen(elemento.selectFirst(".queryly_item_description").text());
                 if (foto) {
-                    noticia.setContenidoFoto(traerFoto(noticia.getEnlaceFoto()));
-                    noticia.setContenTypeFoto("image/jpeg");
+                    Noticia noticiaConFoto = traerFoto(noticia);
+                    noticias.add(noticiaConFoto);
+                } else {
+                    noticias.add(noticia);
                 }
-                noticias.add(noticia);
             }
             return noticias;
         } catch (Exception ex) {
@@ -55,12 +57,15 @@ public class ScrapperService {
         }
     }
 
-    public String traerFoto(String url){
+    public Noticia traerFoto(Noticia noticia){
         RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.setAccept(Collections.singletonList(MediaType.IMAGE_JPEG));
         HttpEntity<String> entity = new HttpEntity<>(headers);
-        ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, entity, byte[].class);
-        return Base64.getEncoder().encodeToString(response.getBody());
+        ResponseEntity<byte[]> response = restTemplate.exchange(noticia.getEnlaceFoto(), HttpMethod.GET, entity, byte[].class);
+
+        noticia.setContenidoFoto(Base64.getEncoder().encodeToString(response.getBody()));
+        noticia.setContenTypeFoto(response.getHeaders().getContentType().toString());
+        return noticia;
     }
 }

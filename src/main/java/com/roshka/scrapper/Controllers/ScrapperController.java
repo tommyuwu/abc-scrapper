@@ -2,8 +2,9 @@ package com.roshka.scrapper.Controllers;
 
 import com.roshka.scrapper.Models.Noticia;
 import com.roshka.scrapper.Services.ScrapperService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.roshka.scrapper.Utils.JwtUtil;
 import com.roshka.scrapper.Exceptions.CustomExceptions.*;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -15,13 +16,20 @@ public class ScrapperController {
 
     private final ScrapperService scrapperService;
 
-    @Autowired
     public ScrapperController(ScrapperService scrapperService) {
         this.scrapperService = scrapperService;
     }
 
+    @GetMapping("/token")
+    public String getToken() {
+        String subject = "usuario";
+        return JwtUtil.generateToken(subject);
+    }
+
     @GetMapping("/consulta")
-    public ResponseEntity<List<Noticia>> consulta(@RequestParam("q") String query, @RequestParam("f") Boolean foto) {
+    @SecurityRequirement(name = "jwt")
+    public ResponseEntity<List<Noticia>> consulta(@RequestHeader("Authorization") String token, @RequestParam("q") String query, @RequestParam("f") Boolean foto) {
+        JwtUtil.validateTokenAndGetSubject(token.substring("Bearer ".length()));
         try {
             if (query.isBlank()) {
                 throw new BadRequestException("Parámetros inválidos");
